@@ -1,0 +1,8 @@
+gdown
+matplotlib==3.3.3
+torch==1.7.0
+torchvision==0.8.1
+numpy==1.19.4
+soundfile==0.10.2
+# opencv-python
+librosa==0.8.0

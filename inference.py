@@ -18,7 +18,7 @@ def get_args():
     parser.add_argument('--output', '-o', help='Output directory.', required=True)
 
     # config
-    parser.add_argument('--config', '-c', help='The train config with respect to the model resumed.', default='./config/train.yaml')
+    parser.add_argument('--config', '-c', help='The train config with respect to the model resumed.', default='./config/train_again-c4s.yaml')
     parser.add_argument('--dsp-config', '-d', help='The dsp config with respect to the training data.', default='./config/preprocess.yaml')
    
     # dryrun

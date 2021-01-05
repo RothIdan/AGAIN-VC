@@ -57,7 +57,7 @@ def save_checkpoint(state, save_path, is_best=False, max_keep=None):
         shutil.copyfile(os.path.join(save_dir, save_path), os.path.join(save_dir, 'best_model.ckpt'))
 
 
-def load_checkpoint(ckpt_dir_or_file, map_location=None, load_best=False):
+def load_checkpoint(ckpt_dir_or_file, device, map_location=None, load_best=False):
     if os.path.isdir(ckpt_dir_or_file):
         if load_best:
             ckpt_path = os.path.join(ckpt_dir_or_file, 'best_model.ckpt')
@@ -66,6 +66,7 @@ def load_checkpoint(ckpt_dir_or_file, map_location=None, load_best=False):
                 ckpt_path = os.path.join(ckpt_dir_or_file, f.readline()[:-1])
     else:
         ckpt_path = ckpt_dir_or_file
-    ckpt = torch.load(ckpt_path, map_location=map_location)
+    # ckpt = torch.load(ckpt_path, map_location=map_location)
+    ckpt = torch.load(ckpt_path, map_location=device)
     logger.info(' [*] Loading checkpoint from %s succeed!' % ckpt_path)
     return ckpt
