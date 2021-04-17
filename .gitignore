@@ -5,3 +5,9 @@
 checkpoints/
 wandb/
 data/generated/
+data/wav48_silence_trimmed
+data/txt
+data/speaker
+PycharmProjects/
+data/generated_orig
+data/update.txt

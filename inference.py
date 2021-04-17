@@ -43,8 +43,8 @@ if __name__ == '__main__':
     args.dsp_config = Config(args.dsp_config)
 
     # log some info
-    logger.info(f'Config file:  {args.config}')
-    logger.info(f'Checkpoint:  {args.load}')
+    logger.info(f'Config file: {args.config}')
+    logger.info(f'Checkpoint: {args.load}')
     logger.info(f'Source path: {args.source}')
     logger.info(f'Target path: {args.target}')
     logger.info(f'Output path: {args.output}')

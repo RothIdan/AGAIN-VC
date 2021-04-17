@@ -2,7 +2,7 @@
 
 _name: 'Preprocess Config (default)'
 
-input_path: './data/wav48'
+input_path: './data/wav48_silence_trimmed'
 output_path: './data/features/vctk'
 
 preprocessor_name: vctk

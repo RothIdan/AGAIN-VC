@@ -62,8 +62,7 @@ class Trainer(BaseAgent):
                     train_bar.set_postfix(meta['log'])
 
                 if self.model_state['steps'] % save_steps == 0:
-                    self.save_model(self.model_state, \
-                        os.path.join(self.ckpt_dir_flag, f'steps_{self.model_state["steps"]}.pth'))
+                    self.save_model(self.model_state, os.path.join(self.ckpt_dir_flag, f'steps_{self.model_state["steps"]}.pth'))
                 if self.model_state['steps'] % eval_steps == 0 and self.model_state['steps'] != 0:
                     self.evaluate()
 
