@@ -9,6 +9,8 @@ from preprocessor.base import preprocess_one
 from .base import BaseAgent
 from util.dsp import Dsp
 
+from vocoder.inference_e2e import hifi_gan_mel2wav
+
 logger = logging.getLogger(__name__)
 
 def gen_wav_list(path):
@@ -124,10 +126,19 @@ class Inferencer(BaseAgent):
                     }
                     meta = self.step_fn(self.model_state, data)
                     dec = meta['dec']
-                    self.mel2wav(dec, output_wav)
+                    wav = self.mel2wav(dec, output_wav)
                     Dsp.plot_spectrogram(dec.squeeze().cpu().numpy(), output_plt)
 
+########################################################################################################################
+                    
+                    dec = dec.squeeze()
+                    dec = dec[None].to(self.device).float()
+                    hifi_gan_mel2wav(dec, self.device)  # HiFi-GAN Vocoder
+                    
+##########################################################################################################################
                     source_plt = os.path.join(out_path, 'plt', f'{source_basename}.png')
                     Dsp.plot_spectrogram(source['mel'], source_plt)
                     np.save(os.path.join(out_path, 'mel', f'{source_basename}.npy'), source['mel'])
+
+                    # np.save(os.path.join(out_path, 'npy', f'{source_basename}.npy'), dec.cpu())
         logger.info(f'The generated files are saved to {out_path}.')
