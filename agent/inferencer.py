@@ -5,11 +5,17 @@ import numpy as np
 from glob import glob
 from tqdm import tqdm
 
+import librosa
+import crepe
+from scipy.io import wavfile
+from vocoder.inference_e2e import hifi_gan_mel2wav
+
+
 from preprocessor.base import preprocess_one
 from .base import BaseAgent
 from util.dsp import Dsp
 
-from vocoder.inference_e2e import hifi_gan_mel2wav
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,13 +105,27 @@ class Inferencer(BaseAgent):
                     wav_data[feat] = wav_data[feat][:,:seglen]
                 wav_data.set_processed()
             return
+    
+    
+    def load_wav(self, path, dsp_module):
+        y, sr = librosa.load(path, sr=dsp_module.config.sample_rate)
+        if type(dsp_module.config.trim) is int:
+            y, _ = librosa.effects.trim(y, top_db=dsp_module.config.trim)
+        y = np.clip(y, -1.0, 1.0)
+
+        return y, sr
+       
 
     # ====================================================
     #  inference
     # ====================================================
     def inference(self, source_path, target_path, out_path, seglen):
-        sources, targets, out_path = self.load_wav_data(source_path, target_path, out_path)
+        # sources and targets contain 1 source and 1 target vars when running inference with 2 wav files 
+        sources, targets, out_path = self.load_wav_data(source_path, target_path, out_path) 
         with torch.no_grad():
+            # source and target are of type class WaveData: has attribute 'data' which is a dictionary with 1 key: 'mel'
+            # source.data['mel'] contains a np array of the mel spectogram of size (80,~)
+            # we think that 80 represnts c_in = 80 in the config file
             for i, source in enumerate(sources):
                 logger.info(f'Source: {source.path}')
                 for j, target in enumerate(targets):
@@ -115,8 +135,8 @@ class Inferencer(BaseAgent):
                     output_basename = f'{source_basename}_to_{target_basename}'
                     output_wav = os.path.join(out_path, 'wav', output_basename+'.wav')
                     output_plt = os.path.join(out_path, 'plt', output_basename+'.png')
+                    # The following two line is for generating the mel-spectogram using melgan.
                     self.process_wave_data(source, seglen=seglen)
-                    # These two line is for generating the wav using melgan.
                     # self.dsp.mel2wav(source['melgan'], os.path.join('data/tmp/mos_melgan/', source_basename+'.wav'))
                     # continue
                     self.process_wave_data(target, seglen=seglen)
@@ -125,14 +145,36 @@ class Inferencer(BaseAgent):
                         'target': target,
                     }
                     meta = self.step_fn(self.model_state, data)
+                    # dec containes the converted mel-spectogram generated after the decoder
                     dec = meta['dec']
+                    # wav file synthesize using Mel-GAN
                     wav = self.mel2wav(dec, output_wav)
                     Dsp.plot_spectrogram(dec.squeeze().cpu().numpy(), output_plt)
 
 ########################################################################################################################
                     
+                    
+                    print(f"**********type of sources: {source.data['mel'].shape}, type of targets: {target.data['mel'].shape}************")
+
+
+                    # load and preprocess the wav file 
+                    # self.dsp_modules['mel'] is a DSP object with config method that have all the preprocess.yaml info
+                    audio, sr = self.load_wav(source_path, self.dsp_modules['mel'])
+
+                    # ret = module.wav2mel(y)
+
+                    # sr, audio = wavfile.read(source_path)
+                    # frequency is a np array which contains the pitch frequency in Hz
+                    time, frequency, confidence, activation = crepe.predict(audio, sr, viterbi=True)
+                    ##### need to adjust the 10 ms default of crepe so that the vector will be of the same length 
+
+                    print(f"**********frequency in Hz: {frequency}, type: {frequency.shape}************")
+
+
+
                     dec = dec.squeeze()
                     dec = dec[None].to(self.device).float()
+                    # wav file synthesize using HiFi-GAN and saved at file
                     hifi_gan_mel2wav(dec, self.device)  # HiFi-GAN Vocoder
                     
 ##########################################################################################################################
