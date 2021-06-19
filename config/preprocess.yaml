@@ -2,15 +2,17 @@
 
 _name: 'Preprocess Config (default)'
 
-# input_path: './data/wav48_silence_trimmed'
-input_path: './data/wav48'
+input_path: './data/wav48_silence_trimmed'
+# input_path: './data/wav48'
 output_path: './data/features/vctk'
 
 preprocessor_name: vctk
 
 # Each element in 'feat_to_preprocess' should be defined in the 'feat' session.
 feat_to_preprocess:
-    - mel
+
+
+     - mel
     # - wav
     # - resemblyzer
 
@@ -30,6 +32,7 @@ feat:
        f_min: 0
        f_max: 11025
        trim: 20
+
     # resemblyzer:
     #     dtype: 'resemblyzer'
 

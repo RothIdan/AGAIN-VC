@@ -81,7 +81,7 @@ class Inferencer(BaseAgent):
             os.makedirs(out_path)
             logger.info(f'Output directory "{out_path}" is created.')
         os.makedirs(out_path, exist_ok=True)
-        os.makedirs(os.path.join(out_path, 'wav'), exist_ok=True)
+        os.makedirs(os.path.join(out_path, 'wav_mel_gan'), exist_ok=True)
         os.makedirs(os.path.join(out_path, 'plt'), exist_ok=True)
         os.makedirs(os.path.join(out_path, 'mel'), exist_ok=True)
         os.makedirs(os.path.join(out_path, 'npy'), exist_ok=True)
@@ -106,7 +106,7 @@ class Inferencer(BaseAgent):
                 wav_data.set_processed()
             return
     
-    
+    ###################################################################################################################################
     def load_wav(self, path, dsp_module):
         y, sr = librosa.load(path, sr=dsp_module.config.sample_rate)
         if type(dsp_module.config.trim) is int:
@@ -114,7 +114,9 @@ class Inferencer(BaseAgent):
         y = np.clip(y, -1.0, 1.0)
 
         return y, sr
-       
+    ###################################################################################################################################
+
+
 
     # ====================================================
     #  inference
@@ -133,13 +135,43 @@ class Inferencer(BaseAgent):
                     source_basename = os.path.basename(source.path).split('.wav')[0]
                     target_basename = os.path.basename(target.path).split('.wav')[0]
                     output_basename = f'{source_basename}_to_{target_basename}'
-                    output_wav = os.path.join(out_path, 'wav', output_basename+'.wav')
+                    output_wav = os.path.join(out_path, 'wav_mel_gan', output_basename+'.wav')
                     output_plt = os.path.join(out_path, 'plt', output_basename+'.png')
                     # The following two line is for generating the mel-spectogram using melgan.
                     self.process_wave_data(source, seglen=seglen)
                     # self.dsp.mel2wav(source['melgan'], os.path.join('data/tmp/mos_melgan/', source_basename+'.wav'))
                     # continue
                     self.process_wave_data(target, seglen=seglen)
+##################################################################################################################################
+
+                    # hop_length = self.dsp_modules['mel'].config.hop_length
+                    # # load and preprocess the wav file 
+                    # # self.dsp_modules['mel'] is a DSP object with config method that have all the preprocess.yaml info
+                    # src_audio, sr = self.load_wav(source_path, self.dsp_modules['mel'])
+                    # tar_audio, sr = self.load_wav(target_path, self.dsp_modules['mel'])
+                    # # frequency is a np array which contains the pitch frequency in Hz
+                    # # step size is 10ms by default
+                    # _, src_freq, _, _ = crepe.predict(src_audio, sr, viterbi=True, step_size=1000*(hop_length/sr))
+                    # _, tar_freq, _, _ = crepe.predict(tar_audio, sr, viterbi=True, step_size=1000*(hop_length/sr))
+                    
+                    # # reshaping if needed
+                    # src_mel_len = source.data['mel'].shape[1]
+                    # tar_mel_len = target.data['mel'].shape[1]
+                    # if len(src_freq) < src_mel_len:
+                    #     pad_sz = src_mel_len-len(src_freq)
+                    #     src_frec = np.pad(src_frec, (0,pad_sz), mode='constant')
+                    # if len(tar_freq) < tar_mel_len:
+                    #     pad_sz = tar_mel_len-len(tar_freq)
+                    #     tar_freq = np.pad(tar_freq, (0,pad_sz), mode='constant')
+
+                    # # Concatenating the pitch estimation to the input Mel-spectograms
+                    # source.data['mel'] = np.concatenate((source.data['mel'], [src_freq[:src_mel_len]]))
+                    # target.data['mel'] = np.concatenate((target.data['mel'], [tar_freq[:tar_mel_len]]))
+
+
+#####################################################################################################################################
+
+                    # print(f'************{source.data["mel"].shape}***************')
                     data = {
                         'source': source,
                         'target': target,
@@ -151,33 +183,16 @@ class Inferencer(BaseAgent):
                     wav = self.mel2wav(dec, output_wav)
                     Dsp.plot_spectrogram(dec.squeeze().cpu().numpy(), output_plt)
 
-########################################################################################################################
+
+##########################################################################################################################
                     
-                    
-                    print(f"**********type of sources: {source.data['mel'].shape}, type of targets: {target.data['mel'].shape}************")
-
-
-                    # load and preprocess the wav file 
-                    # self.dsp_modules['mel'] is a DSP object with config method that have all the preprocess.yaml info
-                    audio, sr = self.load_wav(source_path, self.dsp_modules['mel'])
-
-                    # ret = module.wav2mel(y)
-
-                    # sr, audio = wavfile.read(source_path)
-                    # frequency is a np array which contains the pitch frequency in Hz
-                    time, frequency, confidence, activation = crepe.predict(audio, sr, viterbi=True)
-                    ##### need to adjust the 10 ms default of crepe so that the vector will be of the same length 
-
-                    print(f"**********frequency in Hz: {frequency}, type: {frequency.shape}************")
-
-
-
                     dec = dec.squeeze()
                     dec = dec[None].to(self.device).float()
                     # wav file synthesize using HiFi-GAN and saved at file
-                    hifi_gan_mel2wav(dec, self.device)  # HiFi-GAN Vocoder
+                    hifi_gan_mel2wav(dec, self.device, output_basename)  # HiFi-GAN Vocoder
                     
 ##########################################################################################################################
+
                     source_plt = os.path.join(out_path, 'plt', f'{source_basename}.png')
                     Dsp.plot_spectrogram(source['mel'], source_plt)
                     np.save(os.path.join(out_path, 'mel', f'{source_basename}.npy'), source['mel'])

@@ -7,16 +7,35 @@ from multiprocessing.pool import ThreadPool
 
 from util.dsp import Dsp
 
+import crepe
 
 logger = logging.getLogger(__name__)
 
 def preprocess_one(input_items, module, output_path=''):
     input_path, basename = input_items
-    y = module.load_wav(input_path)
+    # load and preprocess the wav file and it's sample rate
+    y, sr = module.load_wav(input_path)
     if module.config.dtype == 'wav':
         ret = y
+    # elif module.config.dtype == 'melspectrogram':
+    #     ret = module.wav2mel(y)
+
+    ##########################################################################################################################
     elif module.config.dtype == 'melspectrogram':
-        ret = module.wav2mel(y)
+        mel = module.wav2mel(y)
+        hop_length = module.config.hop_length
+        # pitch estimation - frequency is a np array which contains the pitch frequency in Hz
+        # step size is 10ms by default
+        _, freq, _, _ = crepe.predict(y, sr, viterbi=True, step_size=1000*(hop_length/sr))
+        # reshaping if needed
+        mel_len = mel.shape[1]
+        if len(freq) < mel_len:
+            pad_sz = mel_len - len(freq)
+            freq = np.pad(freq, (0,pad_sz), mode='constant')
+        # Concatenating the pitch estimation to the Mel-spectograms
+        ret = np.concatenate((mel, [freq[:mel_len]]))
+    
+    ###########################################################################################################################
     elif module.config.dtype == 'f0':
         f0, sp, ap = pw.wav2world(y.astype(np.float64), module.config.sample_rate)
         ret = f0

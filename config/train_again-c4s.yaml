@@ -9,6 +9,7 @@ dataset:
     feat_path: data/features/vctk
     feat:
         - 'mel'
+
     indexes_path: ./data/indexes/vctk/indexes.pkl
     seglen: 128
 
@@ -24,7 +25,7 @@ build:
     model:
         params: 
             encoder_params:
-                c_in: 80
+                c_in: 81
                 c_h: 256
                 c_out: 4
                 n_conv_blocks: 6
