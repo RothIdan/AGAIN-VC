@@ -17,10 +17,13 @@ def preprocess_one(input_items, module, output_path=''):
     y, sr = module.load_wav(input_path)
     if module.config.dtype == 'wav':
         ret = y
-    # elif module.config.dtype == 'melspectrogram':
-    #     ret = module.wav2mel(y)
 
     ##########################################################################################################################
+    # elif module.config.dtype == 'melspectrogram': 
+    #     ret = module.wav2mel(y)
+
+    
+    # elif module.config.dtype == 'mel_crepe':
     elif module.config.dtype == 'melspectrogram':
         mel = module.wav2mel(y)
         hop_length = module.config.hop_length

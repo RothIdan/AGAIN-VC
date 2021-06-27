@@ -4,6 +4,7 @@ import pickle as pk
 import importlib
 import torch
 
+
 from dataloader import get_dataset, get_dataloader
 from util.vocoder import get_vocoder
 from util.mytorch import save_checkpoint, load_checkpoint
@@ -40,8 +41,17 @@ class BaseAgent():
         if os.path.exists(train_pkl):
             logger.info(f'=> load train, dev data from {ckpt_dir}')
             train_data = pk.load(open(train_pkl, 'rb'))
+             # train_set is a of 1600 elements which are dict. 
+             # with keys:'mel' for mel-spectogram np array (80,xxx) and 'speaker' for speaker string ('p225')
+            # print(f"**********************data is: {train_data[0]}********************")
+            # print(f"**********************type is: {train_data[0]['mel'].shape}********************")
             dev_data = pk.load(open(dev_pkl, 'rb'))
             train_set = get_dataset(dset='train', dataset_config=dataset_config, njobs=njobs, metadata=train_data)
+            # train_set is a class: dataloader.vctk.Dataset. 
+            # Has attribute data such that train_set.data is a list of 1600 features so train_set.data[i] is o size (80,xxx)
+            
+            # print(f"**********************type is: {type(train_set)}********************")
+            # print(f"**********************shape is: {train_set.data[0]['mel'].shape}********************")
             dev_set = get_dataset(dset='dev', dataset_config=dataset_config, njobs=njobs, metadata=dev_data)
         else:
             train_set = get_dataset(dset='train', dataset_config=dataset_config, njobs=njobs)
@@ -50,6 +60,7 @@ class BaseAgent():
             pk.dump(dev_set.data, open(dev_pkl, 'wb'))
         train_loader = get_dataloader(dset='train', dataloader_config=dataloader_config, dataset=train_set)
         dev_loader = get_dataloader(dset='dev', dataloader_config=dataloader_config, dataset=dev_set)
+        # print(f"**********************type is: {type(train_loader)}********************")
         
         return ckpt_dir_flag, train_set, dev_set, train_loader, dev_loader
 

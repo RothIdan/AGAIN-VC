@@ -1,5 +1,9 @@
 _name: 'Make indexes Config (default)'
 
+# mel_input_path: './data/features/vctk/mel'
+# mel_pitch_input_path: './data/features/vctk/mel_pitch'
+# mel_output_path: './data/indexes/vctk/mel'
+# mel_pitch_output_path: './data/indexes/vctk/mel_pitch'
 input_path: './data/features/vctk/mel'
 output_path: './data/indexes/vctk'
 

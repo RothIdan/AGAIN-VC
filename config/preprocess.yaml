@@ -11,8 +11,9 @@ preprocessor_name: vctk
 # Each element in 'feat_to_preprocess' should be defined in the 'feat' session.
 feat_to_preprocess:
 
-
-     - mel
+   # Preprocess fetures stated here and output them to './data/features/vctk/mel or mel_pitch....'
+      - mel       # mel spectogram
+      # - mel_pitch # mel spectogram concatenated to the pitch estimatiom using CREPE
     # - wav
     # - resemblyzer
 
@@ -32,6 +33,16 @@ feat:
        f_min: 0
        f_max: 11025
        trim: 20
+   #  mel_pitch: # this is for MelGAN
+   #     dtype: 'mel_crepe'
+   #     n_fft: 1024
+   #     hop_length: 256
+   #     win_length: 1024
+   #     sample_rate: 22050
+   #     n_mels: 80
+   #     f_min: 0
+   #     f_max: 11025
+   #     trim: 20
 
     # resemblyzer:
     #     dtype: 'resemblyzer'

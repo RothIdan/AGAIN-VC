@@ -39,7 +39,7 @@ def build_model(build_config, device, mode):
         raise NotImplementedError
 
 # For training and evaluating 
-def train_step(model_state, data, train=True):
+def train_step(model_state, data, train=True):  ### need to give data as the features (data['mel']) and to add ground truth mel (data['mel_pitch']) for the loss
     meta = {}
     model = model_state['model']
     optimizer = model_state['optimizer']
@@ -52,11 +52,13 @@ def train_step(model_state, data, train=True):
         model.train()
     else:
         model.eval()
-
-    x = data['mel'].to(device)
+    # print(f"**************double {data['mel'][0,:,:]}")
+    # print(f"**************double {data['mel'][0,:,:].type(torch.cuda.FloatTensor)}")
+    x = data['mel'].type(torch.cuda.FloatTensor).to(device)
+    mel = x[:, :80, :] # batch of mel-spectograms, extracted from features
 
     dec = model(x)
-    loss_rec = criterion_l1(dec, x)
+    loss_rec = criterion_l1(dec, mel)
 
     loss = loss_rec
 

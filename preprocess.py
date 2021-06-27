@@ -25,7 +25,7 @@ def get_args():
     # config
     parser.add_argument('--config', '-c', default='./config/preprocess.yaml', help='config yaml file')
     # multi thread
-    parser.add_argument('--njobs', '-p', type=int, default=1) ############################# changed n_kobs from 4 to 1
+    parser.add_argument('--njobs', '-p', type=int, default=4) 
 
     return parser.parse_args()
 

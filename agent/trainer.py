@@ -37,8 +37,7 @@ class Trainer(BaseAgent):
             train_bar = tqdm(self.train_loader)
             for data in train_bar:
 
-                print(f'******************* data is: {data["mel"].shape},*************  data type: {type(data["mel"])}****************')
-                
+                # print(f'******************* data is: {data["mel"].shape},*************  data type: {type(data["mel"])}****************')
 
                 self.model_state['steps'] += 1
                 meta = self.step_fn(self.model_state, data)
@@ -51,8 +50,8 @@ class Trainer(BaseAgent):
                         mels = meta['mels']
                         _data = {}
                         for k, v in mels.items():
-                            if v.shape[1] != 81: ############################# changed from 80 to 81 ################################
-                                v = torch.nn.functional.interpolate(v.transpose(1,2), 81).transpose(1,2)
+                            if v.shape[1] != 80:
+                                v = torch.nn.functional.interpolate(v.transpose(1,2), 80).transpose(1,2)
                             _data[k] = (v.cpu().numpy()/5+1, self.mel2wav(v))
                         self.writer.mels_summary(
                             tag='train/seen',
@@ -87,8 +86,8 @@ class Trainer(BaseAgent):
 
             _data = {}
             for k, v in mels.items():
-                if v.shape[1] != 81: ############################# changed from 80 to 81 #########################################
-                    v = torch.nn.functional.interpolate(v.transpose(1,2), 81).transpose(1,2)
+                if v.shape[1] != 80:
+                    v = torch.nn.functional.interpolate(v.transpose(1,2), 80).transpose(1,2)
                 _data[k] = (v.cpu().numpy()/5+1, self.mel2wav(v))
             self.writer.mels_summary(
                 tag='dev/unseen',

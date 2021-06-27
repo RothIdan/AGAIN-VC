@@ -23,6 +23,12 @@ if __name__ == '__main__':
     # build indexer
     indexer = get_indexer(config)
 
-    # make indexes
+##################################################################################################################################
+
+    # make indexes for mel-spectogram-pitch features
     indexer.make_indexes(input_path=config.input_path, output_path=config.output_path, 
         split_all=config.split_all, split_train=config.split_train)
+
+    # # make indexes for mel-pitch features
+    # indexer.make_indexes(input_path=config.mel_pitch_input_path, output_path=config.mel_pitch_output_path, 
+    #     split_all=config.split_all, split_train=config.split_train)
