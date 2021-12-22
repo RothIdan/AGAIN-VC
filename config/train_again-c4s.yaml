@@ -9,9 +9,10 @@ dataset:
     feat_path: data/features/vctk # add 'mel' aoutomatically to enter .../vctk/mel folder
     feat:
         - 'mel' 
-
     indexes_path: ./data/indexes/vctk/indexes.pkl  #########################################
     seglen: 128
+    in_type: 'spectogram'
+
 
 dataloader:
     train:

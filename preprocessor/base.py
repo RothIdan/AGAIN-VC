@@ -8,15 +8,26 @@ from multiprocessing.pool import ThreadPool
 from util.dsp import Dsp
 
 import crepe
+import torch
 
 logger = logging.getLogger(__name__)
 
-def preprocess_one(input_items, module, output_path=''):
+def preprocess_one(input_items, module, output_path='', config=None):
     input_path, basename = input_items
     # load and preprocess the wav file and it's sample rate
-    y, sr = module.load_wav(input_path)
+    y_old, sr = module.load_wav(input_path)
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+
+    MAX_WAV_VALUE = 32768.0
+    y = y_old / MAX_WAV_VALUE
+    y = torch.FloatTensor(y).to(device)
+    # x = get_mel(wav.unsqueeze(0))
+
     if module.config.dtype == 'wav':
-        ret = y
+        ret = y_old
 
     ##########################################################################################################################
     # elif module.config.dtype == 'melspectrogram': 
@@ -24,19 +35,32 @@ def preprocess_one(input_items, module, output_path=''):
 
     
     # elif module.config.dtype == 'mel_crepe':
+
+
     elif module.config.dtype == 'melspectrogram':
-        mel = module.wav2mel(y)
-        hop_length = module.config.hop_length
-        # pitch estimation - frequency is a np array which contains the pitch frequency in Hz
-        # step size is 10ms by default
-        _, freq, _, _ = crepe.predict(y, sr, viterbi=True, step_size=1000*(hop_length/sr))
-        # reshaping if needed
-        mel_len = mel.shape[1]
-        if len(freq) < mel_len:
-            pad_sz = mel_len - len(freq)
-            freq = np.pad(freq, (0,pad_sz), mode='constant')
-        # Concatenating the pitch estimation to the Mel-spectograms
-        ret = np.concatenate((mel, [freq[:mel_len]]))
+        if config == None or config.dataset.in_type == 'spectogram_pitch':  
+            mel = module.wav2mel(y_old) ######################## use for MEL-GAN ############################
+
+            ##################### use for HIFI-GAN ######################
+            # mel = module.wav2mel(y.unsqueeze(0), module)
+            # mel = mel.squeeze(0).cpu().numpy()
+
+            hop_length = module.config.hop_length
+            # pitch estimation - frequency is a np array which contains the pitch frequency in Hz
+            # step size is 10ms by default
+            _, freq, _, _ = crepe.predict(y_old, sr, viterbi=True, step_size=1000*(hop_length/sr))
+            freq = np.sin(freq) ############################################################################################
+            # reshaping if needed
+            mel_len = mel.shape[1]
+            if len(freq) < mel_len:
+                pad_sz = mel_len - len(freq)
+                freq = np.pad(freq, (0,pad_sz), mode='constant')
+            # Concatenating the pitch estimation to the Mel-spectograms
+            ret = np.concatenate((mel, [freq[:mel_len]]))
+        elif config.dataset.in_type == 'spectogram':
+            ret = module.wav2mel(y_old, module)
+
+
     
     ###########################################################################################################################
     elif module.config.dtype == 'f0':
